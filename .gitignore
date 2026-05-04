@@ -1,0 +1,18 @@
+# Python scripts (development only, not needed in deployment)
+*.py
+
+# Sensitive files
+github_auth_output.txt
+netlify_site.json
+
+# Test HTML files
+test_*.html
+index_orig.html
+index_single.html
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
