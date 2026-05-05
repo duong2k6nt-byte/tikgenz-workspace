@@ -212,10 +212,9 @@ function saveProject(){
 }
 function buildCard(t){
   var proj=getProjects().find(function(p){return p.id===t.project});
-  var dur=taskDuration(t);
   var rem=daysRemaining(t.deadline);
   var dlc=rem===null?'':rem<0?'overdue':rem<=3?'soon':'ok';
-  var dlTxt=dur===null?'':(dur>0?dur+'N giao':'');
+  var dlTxt=rem===null?'':(rem<0?'Quá hạn '+(Math.abs(rem))+'N':rem===0?'Hôm nay!':'Còn '+rem+'N');
   var users=getUsers();
   var cu=getCurrentUser();
   var isAssignee=t.assignees&&t.assignees.includes(cu.id);
@@ -794,10 +793,10 @@ function renderCalendar(){
   var monthNames=['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
   var first=new Date(y,m,1),last=new Date(y,m+1,0);
   var startDay=first.getDay();
-  var today=new Date();today.setHours(0,0,0,0);
+  var today=todayVN();
   // Build calendar HTML
   var html='<div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">'
-    +'<button class="btn-secondary" style="padding:6px 14px" onclick="prevMonth()">&#9664; Truoc</button>'
+    +'<button class="btn-secondary" style="padding:6px 14px" onclick="prevMonth()">&#9664; Trước</button>'
     +'<h2 style="flex:1;text-align:center;margin:0">'+monthNames[m]+' '+y+'</h2>'
     +'<button class="btn-secondary" style="padding:6px 14px" onclick="nextMonth()">Sau &#9654;</button>'
     +'</div>'
@@ -826,17 +825,16 @@ function renderCalendar(){
     var otherTasks=dayTasks.filter(function(t){
       return !myDayTasks.includes(t);
     });
-    dayTasks=myDayTasks.concat(otherTasks);
+    // Show all tasks (mine first, then others, including done tasks)
     html+='<div class="cal-cell'+(isToday?' today':'')+'"><div class="cal-date">'+d+'</div>';
     dayTasks.forEach(function(t){
-      var diff=Math.ceil((new Date(t.deadline)-today)/86400000);
-      var dotColor=diff<0?'#ef4444':diff<=3?'#ef4444':diff<=7?'#f59e0b':diff<=14?'#f97316':'#22c55e';
-      var projs=getProjects();
-      var p=projs.find(function(x){return x.id===t.project;});
+      var remDays=daysUntil(t.deadline);
+      var timeStr=t.deadlineTime||'';
+      var dotColor=t.done?'#6b7280':remDays<0?'#ef4444':remDays<=3?'#ef4444':remDays<=7?'#f59e0b':'#22c55e';
+      var p=getProjects().find(function(x){return x.id===t.project;});
       var pColor=p?p.color:dotColor;
-      var timeStr=t.deadlineTime?' '+t.deadlineTime:'';
       var isMyTask=t.assignees&&t.assignees.includes(cu2?cu2.id:'');
-      html+='<div class="cal-task-dot" style="background:'+dotColor+';border-left:3px solid '+(pColor||dotColor)+';'+(isMyTask?'font-weight:700;':'')+';cursor:pointer" title="'+t.title+(timeStr?timeStr:'')+(t.assignees?' - Giao cho: '+t.assignees.map(function(aid){var u=getUsers().find(function(x){return x.id===aid});return u?u.name:''}).filter(Boolean).join(', '):'')+'" onclick="openDetail(\''+t.id+'\')">'+( timeStr?'<b>'+timeStr.trim()+'</b> ':'')+t.title.substring(0,16)+'</div>';
+      html+='<div class="cal-task-dot" style="background:'+dotColor+';border-left:3px solid '+(pColor||dotColor)+';'+(isMyTask?'font-weight:700;':'')+';cursor:pointer" title="'+t.title+(timeStr?' '+timeStr:'')+(t.assignees?' - Giao cho: '+t.assignees.map(function(aid){var u=getUsers().find(function(x){return x.id===aid});return u?u.name:''}).filter(Boolean).join(', '):'')+'" onclick="openDetail(\''+t.id+'\')">'+( timeStr?'<b>'+timeStr.trim()+'</b> ':'')+t.title.substring(0,16)+'</div>';
     });
     html+='</div>';
   }

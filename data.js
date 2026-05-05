@@ -171,6 +171,17 @@ function uid() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 }
 
+// Get today's date in Vietnam timezone (GMT+7)
+function todayVN() {
+  // Get current UTC time, then add 7 hours offset
+  var now = new Date();
+  var utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+  var vnMs = utcMs + 7 * 3600000;
+  var vn = new Date(vnMs);
+  // Return midnight of that VN date as local Date
+  return new Date(vn.getFullYear(), vn.getMonth(), vn.getDate());
+}
+
 function formatDate(d) {
   if (!d) return '';
   try {
@@ -184,8 +195,10 @@ function daysUntil(d) {
   if (!d) return null;
   try {
     var parts = String(d).split('-');
+    // Deadline: midnight of that date in local time
     var dl = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-    var now = new Date(); now.setHours(0, 0, 0, 0);
+    // Today: midnight in Vietnam GMT+7
+    var now = todayVN();
     return Math.ceil((dl - now) / 86400000);
   } catch(e) { return null; }
 }
@@ -195,7 +208,9 @@ function taskDuration(t) {
   try {
     var parts = String(t.deadline).split('-');
     var dl = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-    var cr = new Date(t.createdAt); cr.setHours(0, 0, 0, 0);
+    // createdAt is ISO string — convert to VN local midnight
+    var crRaw = new Date(t.createdAt);
+    var cr = new Date(crRaw.getFullYear(), crRaw.getMonth(), crRaw.getDate());
     return Math.ceil((dl - cr) / 86400000);
   } catch(e) { return null; }
 }
