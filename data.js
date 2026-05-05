@@ -47,10 +47,15 @@ function ensureAdmin() {
 //  FIREBASE SYNC LAYER
 // ============================================================
 
+// Timestamp of last local write per key (to suppress listener echo)
+var _localWriteTs = {};
+var _WRITE_SUPPRESS_MS = 3000; // ignore Firebase echoes for 3s after local write
+
 // Push a data key to Firebase (non-blocking)
 function fbPush(key, data) {
   try {
     if (window._firebaseReady && window._db) {
+      _localWriteTs[key] = Date.now(); // mark that WE just wrote
       window._db.ref('workspace/' + key).set(data);
     }
   } catch(e) {}
@@ -66,16 +71,21 @@ window._onFirebaseReady = function() {
 
   _fbSyncKeys.forEach(function(key) {
     window._db.ref('workspace/' + key).on('value', function(snapshot) {
+      // Skip if this event is echoing our own recent local write
+      var lastWrite = _localWriteTs[key] || 0;
+      if (Date.now() - lastWrite < _WRITE_SUPPRESS_MS) {
+        return; // ignore: this is our own write echoing back
+      }
       var data = snapshot.val();
       if (data !== null && data !== undefined) {
-        // Firebase data is authoritative — update local cache
+        // Remote change from another user — update local cache and re-render
         localStorage.setItem('tg_' + key, JSON.stringify(data));
-        // Re-render current view if app is ready
         if (typeof tryRerender === 'function') tryRerender(key);
       } else {
         // Firebase empty for this key — push local data up
         var local = DB.get(key);
         if (local && (Array.isArray(local) ? local.length > 0 : Object.keys(local).length > 0)) {
+          _localWriteTs[key] = Date.now();
           window._db.ref('workspace/' + key).set(local);
         }
       }
