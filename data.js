@@ -105,6 +105,34 @@ function setLogo(l)          { var c = DB.get('config', {}); c.logo = l; DB.set(
 function getGroups()         { return DB.get('groups', []); }
 function saveGroups(g)       { DB.set('groups', g); fbPush('groups', g); }
 
+// ---- Project CRUD ----
+function addProject(p) {
+  var ps = getProjects(); ps.push(p); saveProjects(ps);
+}
+function deleteProject(id) {
+  saveProjects(getProjects().filter(function(p) { return p.id !== id; }));
+  // Also remove tasks belonging to this project
+  saveTasks(getTasks().filter(function(t) { return t.project !== id; }));
+}
+function updateProject(id, data) {
+  var ps = getProjects();
+  var idx = ps.findIndex(function(p) { return p.id === id; });
+  if (idx >= 0) { ps[idx] = Object.assign({}, ps[idx], data); saveProjects(ps); }
+}
+
+// ---- User CRUD ----
+function addUser(u) {
+  var us = getUsers(); us.push(u); saveUsers(us);
+}
+function updateUser(id, data) {
+  var us = getUsers();
+  var idx = us.findIndex(function(u) { return u.id === id; });
+  if (idx >= 0) { us[idx] = Object.assign({}, us[idx], data); saveUsers(us); }
+}
+function deleteUser(id) {
+  saveUsers(getUsers().filter(function(u) { return u.id !== id; }));
+}
+
 function getCurrentUser() {
   try {
     var id = sessionStorage.getItem('tg_currentUser');

@@ -194,7 +194,7 @@ function renderProjects(){
   el.innerHTML=html;
   document.getElementById('btnAddProject').style.display=canManageProjects(cu.role)?'block':'none';
 }
-function deleteProj(id){deleteProject(id);renderProjects();showToast('Da xoa du an','success');}
+function deleteProj(id){deleteProject(id);renderProjects();showToast('Đã xóa dự án','success');}
 function showAddProject(){
   document.getElementById('projectModal').classList.remove('hidden');
   document.getElementById('modalOverlay').classList.remove('hidden');
@@ -208,7 +208,7 @@ function saveProject(){
   var name=document.getElementById('projectName').value.trim();
   if(!name)return;
   addProject({id:uid(),name:name,color:window._col||'#7c3aed',desc:document.getElementById('projectDesc').value});
-  closeModal('projectModal');renderProjects();showToast('Da them du an: '+name,'success');
+  closeModal('projectModal');renderProjects();showToast('Đã thêm dự án: '+name,'success');
 }
 function buildCard(t){
   var proj=getProjects().find(function(p){return p.id===t.project});
@@ -224,32 +224,32 @@ function buildCard(t){
     return u?'<div class="mini-avatar" title="'+u.name+'">'+(u.avatar?'<img src="'+u.avatar+'">':u.name[0].toUpperCase())+'</div>':'';
   }).join(''):'';
   var imgHtml=t.images&&t.images[0]?'<img src="'+t.images[0]+'" class="task-card-img" alt="">':'';
-  var pl=t.priority==='high'?'🔴 Khan':t.priority==='medium'?'🟡 TB':'🟢 Thap';
+  var pl=t.priority==='high'?'🔴 Khẩn cấp':t.priority==='medium'?'🟡 Trung bình':'🟢 Thấp';
   var canDel=canManageTasks(cu.role);
   // Checkbox/action button based on status and role
   var actionBtn='';
   if(t.done){
-    actionBtn='<div class="task-checkbox checked" data-tid="'+t.id+'" onclick="event.stopPropagation();unDoneTask(this.dataset.tid)" title="Huy hoan thanh"></div>';
+    actionBtn='<div class="task-checkbox checked" data-tid="'+t.id+'" onclick="event.stopPropagation();unDoneTask(this.dataset.tid)" title="Hủy hoàn thành"></div>';
   } else if(t.status==='doing'&&isAssignee){
-    actionBtn='<div class="task-checkbox doing-check" data-tid="'+t.id+'" onclick="event.stopPropagation();openSubmitModal(this.dataset.tid)" title="Nop ket qua de hoan thanh"></div>';
+    actionBtn='<div class="task-checkbox doing-check" data-tid="'+t.id+'" onclick="event.stopPropagation();openSubmitModal(this.dataset.tid)" title="Nộp kết quả để hoàn thành"></div>';
   } else if(t.status==='todo'&&isAssignee){
-    actionBtn='<div class="task-checkbox" data-tid="'+t.id+'" onclick="event.stopPropagation();startTask(this.dataset.tid)" title="Bat dau lam viec nay"></div>';
+    actionBtn='<div class="task-checkbox" data-tid="'+t.id+'" onclick="event.stopPropagation();startTask(this.dataset.tid)" title="Bắt đầu làm việc này"></div>';
   } else {
     actionBtn='<div class="task-checkbox'+(t.done?' checked':'')+'" style="opacity:.4"></div>';
   }
   // Start button for todo tasks
   var startBtn='';
   if(t.status==='todo'&&isAssignee&&!t.done){
-    startBtn='<button class="btn-start-task" data-tid="'+t.id+'" onclick="event.stopPropagation();startTask(this.dataset.tid)">▶ Bat dau</button>';
+    startBtn='<button class="btn-start-task" data-tid="'+t.id+'" onclick="event.stopPropagation();startTask(this.dataset.tid)">▶ Bắt đầu</button>';
   } else if(t.status==='doing'&&isAssignee&&!t.done){
-    startBtn='<button class="btn-submit-task" data-tid="'+t.id+'" onclick="event.stopPropagation();openSubmitModal(this.dataset.tid)">📤 Nop ket qua</button>';
+    startBtn='<button class="btn-submit-task" data-tid="'+t.id+'" onclick="event.stopPropagation();openSubmitModal(this.dataset.tid)">📤 Nộp kết quả</button>';
   }
   // Proof link if done
   var proofHtml='';
   if(t.done&&t.proofUrl){
-    proofHtml='<div class="proof-link"><a href="'+t.proofUrl+'" target="_blank">🔗 Xem ket qua</a></div>';
+    proofHtml='<div class="proof-link"><a href="'+t.proofUrl+'" target="_blank">🔗 Xem kết quả</a></div>';
   } else if(t.done&&t.proofImg){
-    proofHtml='<div class="proof-link">📷 Co anh ket qua</div>';
+    proofHtml='<div class="proof-link">📷 Có ảnh kết quả</div>';
   }
   return '<div class="task-card priority-'+t.priority+(t.done?' done-card':'')+'" data-tid="'+t.id+'" onclick="openDetail(this.dataset.tid)">'
     +'<div class="task-card-top">'
@@ -270,13 +270,13 @@ function buildCard(t){
 
 function startTask(id){
   updateTask(id,{status:'doing'});
-  addNotification('Da bat dau task: '+getTasks().find(function(t){return t.id===id}).title);
-  showToast('Da chuyen sang Dang lam!','success');
+  addNotification('Đã bắt đầu task: '+getTasks().find(function(t){return t.id===id}).title);
+  showToast('Đã chuyển sang Đang làm!','success');
   updateBadges();navigate('dashboard');
 }
 function unDoneTask(id){
   updateTask(id,{done:false,status:'doing',proofUrl:'',proofImg:''});
-  showToast('Da huy hoan thanh','success');
+  showToast('Đã hủy hoàn thành','success');
   updateBadges();navigate('dashboard');
 }
 function openSubmitModal(id){
@@ -303,12 +303,12 @@ function saveSubmit(){
   var id=document.getElementById('submitTaskId').value;
   var url=document.getElementById('submitUrl').value.trim();
   var img=window._submitImg||'';
-  if(!url&&!img){showToast('Can nhap link hoac upload anh ket qua!','error');return;}
+  if(!url&&!img){showToast('Cần nhập link hoặc upload ảnh kết quả!','error');return;}
   var t=getTasks().find(function(x){return x.id===id});
   updateTask(id,{status:'review',proofUrl:url,proofImg:img,submittedAt:new Date().toISOString()});
-  addNotification('Co nhiem vu cho nghiem thu: '+(t?t.title:''));
+  addNotification('Có nhiệm vụ chờ nghiệm thu: '+(t?t.title:''));
   closeModal('submitModal');
-  showToast('Da nop ket qua! Cho admin nghiem thu.','success');
+  showToast('Đã nộp kết quả! Chờ admin nghiệm thu.','success');
   updateBadges();navigate('dashboard');
 }
 
